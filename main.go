@@ -7,6 +7,7 @@ import (
 	"fmt"
 	"log"
 	"os"
+	"strconv"
 	"sync"
 	"time"
 
@@ -225,7 +226,8 @@ func main() {
 	}
 
 	//iterativeQuery()
-	linearQuery(3, 500)
+	delay, _ := strconv.Atoi(os.Getenv("DELAY"))
+	linearQuery(3, time.Duration(delay))
 	//runjobListingQuery("A")
 
 }
