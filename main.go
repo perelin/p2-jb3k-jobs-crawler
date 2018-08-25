@@ -99,7 +99,7 @@ func runjobListingQuery(queryString string) {
 	//fmt.Println(len(jobLists.D.Result.Items))
 
 	//fmt.Println("whatup!")
-	//fmt.Println(os.Getenv("DB_URL"))
+	//fmt.Println(os.Getenv("DB_URL"))bb
 
 	db, err := gorm.Open("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
