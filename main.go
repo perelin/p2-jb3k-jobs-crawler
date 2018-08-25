@@ -101,7 +101,7 @@ func runjobListingQuery(queryString string) {
 	//fmt.Println("whatup!")
 	//fmt.Println(os.Getenv("DB_URL"))
 
-	db, err := gorm.Open("postgres", os.Getenv("DB_URL"))
+	db, err := gorm.Open("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
 		log.Println(err)
 		panic("failed to connect database")
