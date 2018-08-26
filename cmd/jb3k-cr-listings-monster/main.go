@@ -14,6 +14,7 @@ import (
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/joho/godotenv"
+	//_ "github.com/joho/godotenv/autoload"
 	"github.com/parnurzeal/gorequest"
 )
 
@@ -220,10 +221,13 @@ func linearQuery(digits int, delayMiliseconds time.Duration) {
 
 func main() {
 
-	err := godotenv.Load()
+	err := godotenv.Load("../../.env")
 	if err != nil {
-		fmt.Println("Error loading .env file")
+		fmt.Println("Error loading local .env file")
 	}
+
+	fmt.Println("sdf")
+	fmt.Println(os.Getenv("DATABASE_URL"))
 
 	//iterativeQuery()
 	delay, _ := strconv.Atoi(os.Getenv("DELAY"))

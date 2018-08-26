@@ -1,7 +1,12 @@
 {
     "comment": "",
     "ignore": "test",
-    "heroku.goVersion": "go1.10.3",
+    "heroku": {
+        "install": [
+            "./cmd/..."
+        ],
+        "goVersion": "go1.10.3"
+    },
     "package": [{
             "checksumSHA1": "K2x9czFwwfYcB6GyZCqZmJsa7gE=",
             "path": "github.com/jinzhu/gorm",

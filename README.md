@@ -6,3 +6,6 @@ https://devcenter.heroku.com/articles/one-off-dynos#running-tasks-in-background
 heroku run:detached recruitbot3000
 heroku logs --app secret-waters-77818 --dyno run.4980 --tail
 
+https://ieftimov.com/golang-package-multiple-binaries
+
+go install ./... 
