@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -19,8 +18,6 @@ import (
 	"github.com/parnurzeal/gorequest"
 	log "github.com/sirupsen/logrus"
 )
-
-var request = gorequest.New()
 
 type monsterJobAdListResults []struct {
 	JobID                 int    `json:"JobID"`
@@ -74,62 +71,13 @@ type monsterJobAdListResults []struct {
 	MultilocHover              interface{} `json:"MultilocHover"`
 }
 
-// func scrapeJobListings(query string, page int) bool {
-// 	// Request the HTML page.
-// 	res, err := http.Get("https://www.monster.de/jobs/suche/?q=" + query + "&page=" + strconv.Itoa(page))
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-// 	defer res.Body.Close()
-// 	if res.StatusCode != 200 {
-// 		log.Printf("status code error: %d %s", res.StatusCode, res.Status)
-// 		return false
-// 	}
-
-// 	// Load the HTML document
-// 	doc, err := goquery.NewDocumentFromReader(res.Body)
-// 	if err != nil {
-// 		log.Fatal(err)
-// 	}
-
-// 	title := doc.Find("Title").Text()
-
-// 	fmt.Println(title)
-
-// 	results := doc.Find("div#SearchResults section").Each(func(i int, s *goquery.Selection) {
-// 		//jobID, _ := s.Attr("data-jobid")
-// 		//linkName := s.Find("a").Text()
-// 		linkURL, linkAvailable := s.Find("a").Attr("href")
-// 		// fmt.Println(jobID)
-// 		// fmt.Println(linkName)
-// 		// fmt.Println(linkURL)
-// 		if linkAvailable {
-// 			scrapeJobAd(linkURL)
-// 		}
-// 	})
-
-// 	if results.Length() == 0 {
-// 		return false
-// 	}
-
-// 	fmt.Println(results.Length())
-
-// 	// Find the review items
-// 	// doc.Find(".sidebar-reviews article .content-block").Each(func(i int, s *goquery.Selection) {
-// 	// 	// For each item found, get the band and title
-// 	// 	band := s.Find("a").Text()
-// 	// 	title := s.Find("i").Text()
-// 	// 	fmt.Printf("Review %d: %s - %s\n", i, band, title)
-// 	// })
-
-// 	return true
-// }
+var request = gorequest.New()
 
 func scrapeJobListingsFromJSON(query string, page int) bool {
 
 	requestString := "https://www.monster.de/jobs/suche/pagination/?q=" + query + "&isDynamicPage=true&isMKPagination=true&page=" + strconv.Itoa(page)
 
-	log.Debug(requestString)
+	log.WithField("url", requestString).Info("Request URL")
 
 	resp, _, errs := request.Get(requestString).End()
 
@@ -232,6 +180,12 @@ func saveJobAdToDB(dataJobID string, jobModel models.MonsterJobAdModel) {
 }
 
 func init() {
+
+	err := godotenv.Load("../../.env")
+	if err != nil {
+		log.Error("Error loading local .env file")
+	}
+
 	// Log as JSON instead of the default ASCII formatter.
 	//log.SetFormatter(&log.JSONFormatter{})
 
@@ -240,24 +194,22 @@ func init() {
 	//log.SetOutput(os.Stdout)
 
 	// Only log the warning severity or above.
-	log.SetLevel(log.DebugLevel)
-	fmt.Println(log.InfoLevel)
+	//log.SetLevel(log.DebugLevel)
+	logLevel, _ := log.ParseLevel(os.Getenv("LOG_LEVEL"))
+	log.SetLevel(logLevel)
+
 }
 
 func main() {
 
 	log.Info("Job collector starting")
 
-	err := godotenv.Load("../../.env")
-	if err != nil {
-		log.Error("Error loading local .env file")
-	}
-
+	query := "Java"
 	continueToNextPage := true
 
-	for i := 35; continueToNextPage; i++ {
+	for i := 1; continueToNextPage; i++ {
 
-		continueToNextPage = scrapeJobListingsFromJSON("Java", i)
+		continueToNextPage = scrapeJobListingsFromJSON(query, i)
 
 		log.Debug(continueToNextPage)
 	}
