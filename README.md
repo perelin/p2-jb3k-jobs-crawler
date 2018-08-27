@@ -7,9 +7,16 @@ heroku run:detached recruitbot3000
 heroku logs --app secret-waters-77818 --dyno run.4980 --tail
 
 heroku run:detached jb3k-cr-ads-monster
+heroku run jb3k-tools-db
 
 https://ieftimov.com/golang-package-multiple-binaries
 
 go install ./... 
 
 https://stackoverflow.com/questions/24790175/when-is-the-init-function-run
+
+# 2do
+
+in tests:
+- assert that job names without results have the correct negative string
+- assert that healthy job lists always have 26 entries

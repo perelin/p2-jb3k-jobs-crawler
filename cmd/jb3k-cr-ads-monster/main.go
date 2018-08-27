@@ -76,7 +76,14 @@ type monsterJobAdListResults []struct {
 
 var request = gorequest.New()
 
+func delayForMonsterAPI() {
+	delay, _ := strconv.Atoi(os.Getenv("DELAY"))
+	time.Sleep(time.Duration(delay) * time.Millisecond)
+}
+
 func scrapeJobListingsFromJSON(query string, page int) bool {
+
+	delayForMonsterAPI()
 
 	requestString := "https://www.monster.de/jobs/suche/pagination/?q=" + query + "&isDynamicPage=true&isMKPagination=true&page=" + strconv.Itoa(page)
 
@@ -115,6 +122,8 @@ func scrapeJobListingsFromJSON(query string, page int) bool {
 }
 
 func scrapeJobAd(linkURL string, query string) {
+
+	delayForMonsterAPI()
 
 	log.Debug(linkURL)
 
@@ -258,12 +267,12 @@ func checkIfJobsAreAvailableForQuery(query string) bool {
 
 func getJobAdsForJobNames() {
 	jobNames := getJobNames()
-	jobNamesSeq := u.From(jobNames, len(jobNames))
+	jobNamesSeq := u.From(jobNames, len(jobNames)) // shuffling names, this is a bit weird. should refactor
 	jobNamesShuffled := u.Shuffle(jobNamesSeq)
 	for _, jobName := range jobNamesShuffled {
-		jobNameAsserted := jobName.(models.MonsterJobListModel)
+		jobNameAsserted := jobName.(models.MonsterJobListModel) // casting back to original type (from shuffling type)
 		query := url.QueryEscape(jobNameAsserted.Text)
-		log.WithField("Job Query", query).Info("Starting new job name query")
+		log.WithField("Job Query", query).Info("Starting new job name query") // should be in a test if this still works
 		jobsAvailable := checkIfJobsAreAvailableForQuery(query)
 		if !jobsAvailable {
 			continue
