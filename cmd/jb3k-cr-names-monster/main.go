@@ -11,6 +11,8 @@ import (
 	"sync"
 	"time"
 
+	models "p2lab/recruitbot3000/pkg/models"
+
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/joho/godotenv"
@@ -33,13 +35,6 @@ type monsterJobListResults struct {
 	} `json:"d"`
 }
 
-type monsterJobListModel struct {
-	Text      string
-	MonsterID string
-	Query     string
-	gorm.Model
-}
-
 var request = gorequest.New()
 
 func buildQueryURLArbeitgeber(queryString string) string {
@@ -50,19 +45,6 @@ func buildQueryURLArbeitgeber(queryString string) string {
 	searchFlags := "1"  // 419
 
 	fullQueryURL := "https://arbeitgeber.monster.de/SharedUI/Services/AutoComplete.asmx/GetCompletionList?request=%7B%22Query%22%3A%22" + query + "%22%2C%22MaxResults%22%3A" + maxResults + "%2C%22SearchType%22%3A" + searchType + "%2C%22SearchFlags%22%3A" + searchFlags + "%7D"
-
-	return fullQueryURL
-
-}
-
-func buildQueryURLStartpage(queryString string) string {
-
-	query := queryString
-	maxResults := "1000"
-	searchType := "132" // 132
-	channelID := "419"  // 419
-
-	fullQueryURL := "https://www.monster.de/Services/MAutoComplete.asmx/GetCompletionList?request=%7B%22Query%22%3A%22" + query + "%22%2C%22MaxResults%22%3A" + maxResults + "%2C%22SearchType%22%3A" + searchType + "%2C%22ChannelId%22%3A" + channelID + "%7D"
 
 	return fullQueryURL
 
@@ -110,19 +92,19 @@ func runjobListingQuery(queryString string) {
 	}
 	defer db.Close()
 
-	db.AutoMigrate(&monsterJobListModel{})
+	db.AutoMigrate(&models.MonsterJobListModel{})
 
 	for _, job := range jobLists.D.Result.Items {
 
 		//fmt.Println(job.Text)
 
-		jobModel := monsterJobListModel{
+		jobModel := models.MonsterJobListModel{
 			Text:      job.Text,
 			MonsterID: fmt.Sprintf("%v", job.ID),
 			Query:     queryString,
 		}
 
-		db.Where(monsterJobListModel{
+		db.Where(models.MonsterJobListModel{
 			MonsterID: fmt.Sprintf("%v", job.ID),
 		}).FirstOrCreate(&jobModel)
 

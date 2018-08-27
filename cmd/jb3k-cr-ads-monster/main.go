@@ -5,13 +5,16 @@ import (
 	"encoding/json"
 	"io/ioutil"
 	"net/http"
+	"net/url"
 	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	models "p2lab/recruitbot3000/pkg/models"
 
 	"github.com/PuerkitoBio/goquery"
+	u "github.com/alxrm/ugo"
 	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/joho/godotenv"
@@ -96,25 +99,22 @@ func scrapeJobListingsFromJSON(query string, page int) bool {
 		log.Error("Couldn´t parse Job Ad listing page: ", err)
 	}
 
-	if len(jobList) == 0 {
-		return false
-	}
-
 	log.WithFields(log.Fields{"page": page, "result count": len(jobList)}).Info("Received result list")
-
-	//log.Debug(jobList[0].JobViewURL)
-	//fmt.Println(len(jobList))
 
 	for _, jobEntry := range jobList {
 		if jobEntry.JobViewURL != "" {
-			scrapeJobAd(jobEntry.JobViewURL)
+			scrapeJobAd(jobEntry.JobViewURL, query)
 		}
+	}
+
+	if len(jobList) == 0 || len(jobList) < 26 {
+		return false
 	}
 
 	return true
 }
 
-func scrapeJobAd(linkURL string) {
+func scrapeJobAd(linkURL string, query string) {
 
 	log.Debug(linkURL)
 
@@ -158,6 +158,7 @@ func scrapeJobAd(linkURL string) {
 		URL:            linkURL,
 		Location:       subtitle,
 		Employer:       employer,
+		Query:          query,
 		FullHTML:       bodyText,
 		FirstEncounter: time.Now(),
 		LastEncounter:  time.Now(),
@@ -200,17 +201,85 @@ func init() {
 
 }
 
+func getJobNames() []models.MonsterJobListModel {
+
+	db, err := gorm.Open("postgres", os.Getenv("DATABASE_URL"))
+	if err != nil {
+		log.Println("failed to connect database", err)
+		panic("failed to connect database")
+	}
+	defer db.Close()
+
+	var jobNames []models.MonsterJobListModel
+
+	db.Find(&jobNames)
+
+	//fmt.Println(jobNames)
+
+	return jobNames
+	// query := url.QueryEscape("Analyst Beschaffung")
+	// fmt.Println(query)
+}
+
+func checkIfJobsAreAvailableForQuery(query string) bool {
+	jobsAreAvailable := true
+	jobListingURL := "https://www.monster.de/jobs/suche/?q=" + query
+	res, err := http.Get(jobListingURL)
+	if err != nil {
+		log.Error("Couldnt check if jobs are available: ", err)
+		return false
+	}
+	defer res.Body.Close()
+	if res.StatusCode != 200 {
+		log.Errorf("Couldnt check if jobs are available, returns non 200, status code error: %d %s", res.StatusCode, res.Status)
+		return false
+	}
+
+	doc, err := goquery.NewDocumentFromReader(res.Body)
+	if err != nil {
+		log.Error("Couldnt check if jobs are available, couldn´t parse list page", err)
+		return false
+	}
+
+	headerText := doc.Find("header.title h1.pivot").Text()
+
+	negative := "Leider haben wir für diese Suche keinen passenden Job."
+
+	actual := strings.TrimSpace(headerText)
+
+	if negative == actual {
+		jobsAreAvailable = false
+	}
+
+	log.WithFields(log.Fields{"query": query, "jobsAvailable": jobsAreAvailable}).Debug("Checked if jobs are available")
+
+	return jobsAreAvailable
+}
+
+func getJobAdsForJobNames() {
+	jobNames := getJobNames()
+	jobNamesSeq := u.From(jobNames, len(jobNames))
+	jobNamesShuffled := u.Shuffle(jobNamesSeq)
+	for _, jobName := range jobNamesShuffled {
+		jobNameAsserted := jobName.(models.MonsterJobListModel)
+		query := url.QueryEscape(jobNameAsserted.Text)
+		log.WithField("Job Query", query).Info("Starting new job name query")
+		jobsAvailable := checkIfJobsAreAvailableForQuery(query)
+		if !jobsAvailable {
+			continue
+		}
+		continueToNextPage := true
+		for i := 1; continueToNextPage; i++ {
+			continueToNextPage = scrapeJobListingsFromJSON(query, i)
+			log.Debug("Continues to next page? ", continueToNextPage)
+		}
+	}
+}
+
 func main() {
 
 	log.Info("Job collector starting")
 
-	query := "Java"
-	continueToNextPage := true
+	getJobAdsForJobNames()
 
-	for i := 1; continueToNextPage; i++ {
-
-		continueToNextPage = scrapeJobListingsFromJSON(query, i)
-
-		log.Debug("Continues to next page? ", continueToNextPage)
-	}
 }
