@@ -3,7 +3,6 @@ package main
 import (
 	"bytes"
 	"encoding/json"
-	"fmt"
 	"io/ioutil"
 	"net/http"
 	"os"
@@ -74,56 +73,56 @@ type monsterJobAdListResults []struct {
 	MultilocHover              interface{} `json:"MultilocHover"`
 }
 
-func scrapeJobListings(query string, page int) bool {
-	// Request the HTML page.
-	res, err := http.Get("https://www.monster.de/jobs/suche/?q=" + query + "&page=" + strconv.Itoa(page))
-	if err != nil {
-		log.Fatal(err)
-	}
-	defer res.Body.Close()
-	if res.StatusCode != 200 {
-		log.Printf("status code error: %d %s", res.StatusCode, res.Status)
-		return false
-	}
+// func scrapeJobListings(query string, page int) bool {
+// 	// Request the HTML page.
+// 	res, err := http.Get("https://www.monster.de/jobs/suche/?q=" + query + "&page=" + strconv.Itoa(page))
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
+// 	defer res.Body.Close()
+// 	if res.StatusCode != 200 {
+// 		log.Printf("status code error: %d %s", res.StatusCode, res.Status)
+// 		return false
+// 	}
 
-	// Load the HTML document
-	doc, err := goquery.NewDocumentFromReader(res.Body)
-	if err != nil {
-		log.Fatal(err)
-	}
+// 	// Load the HTML document
+// 	doc, err := goquery.NewDocumentFromReader(res.Body)
+// 	if err != nil {
+// 		log.Fatal(err)
+// 	}
 
-	title := doc.Find("Title").Text()
+// 	title := doc.Find("Title").Text()
 
-	fmt.Println(title)
+// 	fmt.Println(title)
 
-	results := doc.Find("div#SearchResults section").Each(func(i int, s *goquery.Selection) {
-		//jobID, _ := s.Attr("data-jobid")
-		//linkName := s.Find("a").Text()
-		linkURL, linkAvailable := s.Find("a").Attr("href")
-		// fmt.Println(jobID)
-		// fmt.Println(linkName)
-		// fmt.Println(linkURL)
-		if linkAvailable {
-			scrapeJobAd(linkURL)
-		}
-	})
+// 	results := doc.Find("div#SearchResults section").Each(func(i int, s *goquery.Selection) {
+// 		//jobID, _ := s.Attr("data-jobid")
+// 		//linkName := s.Find("a").Text()
+// 		linkURL, linkAvailable := s.Find("a").Attr("href")
+// 		// fmt.Println(jobID)
+// 		// fmt.Println(linkName)
+// 		// fmt.Println(linkURL)
+// 		if linkAvailable {
+// 			scrapeJobAd(linkURL)
+// 		}
+// 	})
 
-	if results.Length() == 0 {
-		return false
-	}
+// 	if results.Length() == 0 {
+// 		return false
+// 	}
 
-	fmt.Println(results.Length())
+// 	fmt.Println(results.Length())
 
-	// Find the review items
-	// doc.Find(".sidebar-reviews article .content-block").Each(func(i int, s *goquery.Selection) {
-	// 	// For each item found, get the band and title
-	// 	band := s.Find("a").Text()
-	// 	title := s.Find("i").Text()
-	// 	fmt.Printf("Review %d: %s - %s\n", i, band, title)
-	// })
+// 	// Find the review items
+// 	// doc.Find(".sidebar-reviews article .content-block").Each(func(i int, s *goquery.Selection) {
+// 	// 	// For each item found, get the band and title
+// 	// 	band := s.Find("a").Text()
+// 	// 	title := s.Find("i").Text()
+// 	// 	fmt.Printf("Review %d: %s - %s\n", i, band, title)
+// 	// })
 
-	return true
-}
+// 	return true
+// }
 
 func scrapeJobListingsFromJSON(query string, page int) bool {
 
@@ -172,11 +171,13 @@ func scrapeJobAd(linkURL string) {
 
 	res, err := http.Get(linkURL)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		return
 	}
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
-		log.Fatalf("status code error: %d %s", res.StatusCode, res.Status)
+		log.Errorf("status code error: %d %s", res.StatusCode, res.Status)
+		return
 	}
 
 	bodyBytes, _ := ioutil.ReadAll(res.Body)
@@ -186,7 +187,8 @@ func scrapeJobAd(linkURL string) {
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
-		log.Fatal(err)
+		log.Error(err)
+		return
 	}
 
 	header := doc.Find("div#JobViewHeader")
@@ -251,7 +253,7 @@ func main() {
 
 	continueToNextPage := true
 
-	for i := 1; continueToNextPage; i++ {
+	for i := 35; continueToNextPage; i++ {
 
 		continueToNextPage = scrapeJobListingsFromJSON("Java", i)
 
