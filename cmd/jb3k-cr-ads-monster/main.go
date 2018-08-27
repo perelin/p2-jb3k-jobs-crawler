@@ -77,6 +77,7 @@ type monsterJobAdListResults []struct {
 var request = gorequest.New()
 
 func delayForMonsterAPI() {
+	log.Debug("Waiting delay for api throtteling...")
 	delay, _ := strconv.Atoi(os.Getenv("DELAY"))
 	time.Sleep(time.Duration(delay) * time.Millisecond)
 }
