@@ -77,15 +77,15 @@ func scrapeJobListingsFromJSON(query string, page int) bool {
 
 	requestString := "https://www.monster.de/jobs/suche/pagination/?q=" + query + "&isDynamicPage=true&isMKPagination=true&page=" + strconv.Itoa(page)
 
-	log.WithField("url", requestString).Info("Request URL")
+	log.WithField("url", requestString).Info("Request URL for Job Ad listing")
 
 	resp, _, errs := request.Get(requestString).End()
 
 	if errs != nil {
-		log.Error("%+v", errs)
+		log.Error("Job Ad listing page couldn´t be loaded: ", errs)
 	}
 	if resp.StatusCode != 200 {
-		log.Error("status code error: %d %s", resp.StatusCode, resp.Status)
+		log.Error("Job Ad listing page returns non 200, status code error: %d %s", resp.StatusCode, resp.Status)
 		return false
 	}
 
@@ -93,7 +93,7 @@ func scrapeJobListingsFromJSON(query string, page int) bool {
 
 	err := json.NewDecoder(resp.Body).Decode(&jobList)
 	if err != nil {
-		log.Error(err)
+		log.Error("Couldn´t parse Job Ad listing page: ", err)
 	}
 
 	if len(jobList) == 0 {
@@ -120,12 +120,12 @@ func scrapeJobAd(linkURL string) {
 
 	res, err := http.Get(linkURL)
 	if err != nil {
-		log.Error(err)
+		log.Error("Couldnt load Job Ad page: ", err)
 		return
 	}
 	defer res.Body.Close()
 	if res.StatusCode != 200 {
-		log.Errorf("status code error: %d %s", res.StatusCode, res.Status)
+		log.Errorf("Job Ad page returns non 200, status code error: %d %s", res.StatusCode, res.Status)
 		return
 	}
 
@@ -136,7 +136,7 @@ func scrapeJobAd(linkURL string) {
 	// Load the HTML document
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
-		log.Error(err)
+		log.Error("Couldn´t parse Job Ad page", err)
 		return
 	}
 
@@ -169,7 +169,7 @@ func scrapeJobAd(linkURL string) {
 func saveJobAdToDB(dataJobID string, jobModel models.MonsterJobAdModel) {
 	db, err := gorm.Open("postgres", os.Getenv("DATABASE_URL"))
 	if err != nil {
-		log.Println(err)
+		log.Println("failed to connect database", err)
 		panic("failed to connect database")
 	}
 	defer db.Close()
@@ -211,6 +211,6 @@ func main() {
 
 		continueToNextPage = scrapeJobListingsFromJSON(query, i)
 
-		log.Debug(continueToNextPage)
+		log.Debug("Continues to next page? ", continueToNextPage)
 	}
 }
