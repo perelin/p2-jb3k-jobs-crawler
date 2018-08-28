@@ -8,7 +8,6 @@ import (
 	"log"
 	"os"
 	"strconv"
-	"sync"
 	"time"
 
 	models "p2lab/recruitbot3000/pkg/models"
@@ -114,60 +113,6 @@ func runjobListingQuery(queryString string) {
 	fmt.Println(len(jobLists.D.Result.Items))
 }
 
-func iterativeQuery() {
-
-	var delay time.Duration = 100
-
-	sem := make(chan struct{}, 32)
-	var wg sync.WaitGroup
-
-	for i := 65; i <= 90; i++ {
-		time.Sleep(delay * time.Millisecond)
-		char := byte(i)
-		//fmt.Println(char)
-		//fmt.Println(string(char))
-		wg.Add(1)
-		go func(queryString string) {
-			sem <- struct{}{}
-			defer func() { <-sem }()
-			defer wg.Done()
-			runjobListingQuery(queryString)
-		}(string(char))
-
-		for j := 65; j <= 90; j++ {
-			time.Sleep(delay * time.Millisecond)
-			char2 := byte(j)
-			fmt.Println(string(char) + string(char2))
-			wg.Add(1)
-			go func(queryString2 string) {
-				sem <- struct{}{}
-				defer func() { <-sem }()
-				defer wg.Done()
-				runjobListingQuery(queryString2)
-			}(string(char) + string(char2))
-
-			for k := 65; k <= 90; k++ {
-				time.Sleep(delay * time.Millisecond)
-				char3 := byte(k)
-				fmt.Println(string(char) + string(char2) + string(char3))
-				wg.Add(1)
-				go func(queryString3 string) {
-					sem <- struct{}{}
-					defer func() { <-sem }()
-					defer wg.Done()
-					runjobListingQuery(queryString3)
-				}(string(char) + string(char2) + string(char3))
-
-				//go runjobListingQuery(string(char) + string(char2))
-
-			}
-
-		}
-
-	}
-	wg.Wait()
-}
-
 func linearQuery(digits int, delayMiliseconds time.Duration) {
 
 	for i := 65; i <= 90; i++ {
@@ -211,7 +156,6 @@ func main() {
 	fmt.Println("sdf")
 	fmt.Println(os.Getenv("DATABASE_URL"))
 
-	//iterativeQuery()
 	delay, _ := strconv.Atoi(os.Getenv("DELAY"))
 	linearQuery(3, time.Duration(delay))
 	//runjobListingQuery("A")

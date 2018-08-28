@@ -15,6 +15,9 @@ go install ./...
 
 https://stackoverflow.com/questions/24790175/when-is-the-init-function-run
 
+https://cloud.google.com/natural-language/
+https://azure.microsoft.com/en-us/services/cognitive-services/text-analytics/ 
+
 # 2do
 
 in tests:
