@@ -1,1 +1,1 @@
-worker: recruitbot3000
+web: jb3k-web-search
