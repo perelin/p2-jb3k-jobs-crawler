@@ -57,13 +57,21 @@ func GetJobAdCount() int {
 	return count
 }
 
-func GetAllJobs() []models.MonsterJobAdModel {
+func GetAllJobs(active bool) []models.MonsterJobAdModel {
 	db := initDB()
 	defer db.Close()
 
 	var jobAds []models.MonsterJobAdModel
 
-	db.Select("title, url, monster_job_id, first_encounter, last_encounter, active").Limit(3).Find(&jobAds)
+	db.Select("id, title, url, monster_job_id, first_encounter, last_encounter, active").Where("active = ?", active).Limit(500).Find(&jobAds)
+	//db.Select("id, title, url, monster_job_id, first_encounter, last_encounter, active").Where("id = ?", 534).Limit(500).Find(&jobAds)
 
 	return jobAds
+}
+
+func UpdateJobActiveStatus(jobID int, active bool) {
+	db := initDB()
+	defer db.Close()
+
+	db.Model(&models.MonsterJobAdModel{}).Where("id = ?", jobID).Updates(map[string]interface{}{"active": false, "last_encounter": time.Now()})
 }

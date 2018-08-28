@@ -30,3 +30,6 @@ $ pg_restore -c -d rb3000 latest.dump.1
 in tests:
 - assert that job names without results have the correct negative string
 - assert that healthy job lists always have 26 entries
+
+implement throttel detection
+- when multiple monster get requests fail in a row stop and send an alert
