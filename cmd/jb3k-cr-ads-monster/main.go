@@ -170,6 +170,7 @@ func scrapeJobAd(linkURL string, query string) {
 		Employer:       employer,
 		Query:          query,
 		FullHTML:       bodyText,
+		Active:         true,
 		FirstEncounter: time.Now(),
 		LastEncounter:  time.Now(),
 		MonsterJobID:   dataJobID,

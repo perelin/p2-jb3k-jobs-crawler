@@ -19,6 +19,11 @@ https://cloud.google.com/natural-language/
 https://azure.microsoft.com/en-us/services/cognitive-services/text-analytics/ 
 https://www.textrazor.com/plans
 
+# heroku pg backups
+$ heroku pg:backups:capture
+$ heroku pg:backups:url b001
+$ heroku pg:backups:download
+$ pg_restore -c -d rb3000 latest.dump.1
 
 # 2do
 

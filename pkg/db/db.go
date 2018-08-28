@@ -1,7 +1,6 @@
 package db
 
 import (
-	"fmt"
 	"os"
 	"p2lab/recruitbot3000/pkg/models"
 	"time"
@@ -24,31 +23,31 @@ func init() {
 
 }
 
-func GetLastEntryDate() time.Time {
+func initDB() *gorm.DB {
 	db, err := gorm.Open("postgres", os.Getenv("DATABASE_URL"))
 	//db.LogMode(true)
 	if err != nil {
 		log.Println("failed to connect database", err)
 		panic("failed to connect database")
 	}
+	return db
+}
+
+func GetLastEntryDate() time.Time {
+	db := initDB()
 	defer db.Close()
 
 	var lastJobAd models.MonsterJobAdModel
 
 	db.Last(&lastJobAd)
 
-	fmt.Println(lastJobAd.CreatedAt)
+	//fmt.Println(lastJobAd.CreatedAt)
 
 	return lastJobAd.CreatedAt
 }
 
 func GetJobAdCount() int {
-	db, err := gorm.Open("postgres", os.Getenv("DATABASE_URL"))
-	//db.LogMode(true)
-	if err != nil {
-		log.Println("failed to connect database", err)
-		panic("failed to connect database")
-	}
+	db := initDB()
 	defer db.Close()
 
 	var count int
@@ -56,4 +55,15 @@ func GetJobAdCount() int {
 	db.Model(&models.MonsterJobAdModel{}).Count(&count)
 
 	return count
+}
+
+func GetAllJobs() []models.MonsterJobAdModel {
+	db := initDB()
+	defer db.Close()
+
+	var jobAds []models.MonsterJobAdModel
+
+	db.Select("title, url, monster_job_id, first_encounter, last_encounter, active").Limit(3).Find(&jobAds)
+
+	return jobAds
 }
