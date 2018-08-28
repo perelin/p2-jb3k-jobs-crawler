@@ -1,12 +1,8 @@
 package main
 
 import (
-	"fmt"
 	"os"
 
-	"p2lab/recruitbot3000/pkg/models"
-
-	"github.com/jinzhu/gorm"
 	_ "github.com/jinzhu/gorm/dialects/postgres"
 	"github.com/joho/godotenv"
 	log "github.com/sirupsen/logrus"
@@ -24,20 +20,6 @@ func init() {
 
 }
 
-func GetJobAdCount() int {
-	db, err := gorm.Open("postgres", os.Getenv("DATABASE_URL"))
-	//db.LogMode(true)
-	if err != nil {
-		log.Println("failed to connect database", err)
-		panic("failed to connect database")
-	}
-	defer db.Close()
-
-	var jobAds []models.MonsterJobAdModel
-
-	db.Select([]string{"title", "url", "monster_job_id"}).Find(&jobAds)
-
-	fmt.Println(len(jobAds))
-
-	return len(jobAds)
+func Sum(x int, y int) int {
+	return x + y
 }
