@@ -37,12 +37,17 @@ func main() {
 	fmt.Println(lastEntryTime)
 	jobAds := db.GetAllJobs(true)
 
+	log.WithFields(log.Fields{"count": len(jobAds)}).Info("Found active jobs")
+
 	// walk over ever job
 	// - check ifjob page returns 404
 	// -- set active to false
 
-	for _, jobAd := range jobAds {
+	for i, jobAd := range jobAds {
 		delayForMonsterAPI()
+
+		log.Debug("processing job no. " + strconv.Itoa(i))
+
 		resp, _, errs := request.Get(jobAd.URL).End()
 
 		if errs != nil {
