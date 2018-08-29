@@ -63,8 +63,12 @@ func GetAllJobs(active bool) []models.MonsterJobAdModel {
 
 	var jobAds []models.MonsterJobAdModel
 
-	db.Select("id, title, url, monster_job_id, first_encounter, last_encounter, active").Where("active = ?", active).Find(&jobAds)
-	//db.Select("id, title, url, monster_job_id, first_encounter, last_encounter, active").Where("id = ?", 534).Limit(500).Find(&jobAds)
+	if os.Getenv("ENVIRONMENT") == "production" {
+		db.Select("id, title, url, monster_job_id, first_encounter, last_encounter, active").Where("active = ?", active).Find(&jobAds)
+	} else {
+		db.Select("id, title, url, monster_job_id, first_encounter, last_encounter, active").Where("active = ?", active).Limit(30).Find(&jobAds)
+		//db.Select("id, title, url, monster_job_id, first_encounter, last_encounter, active").Where("id = ?", 534).Limit(30).Find(&jobAds)
+	}
 
 	return jobAds
 }

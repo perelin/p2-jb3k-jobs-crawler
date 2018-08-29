@@ -37,11 +37,14 @@ func main() {
 	fmt.Println(lastEntryTime)
 	jobAds := db.GetAllJobs(true)
 
-	log.WithFields(log.Fields{"count": len(jobAds)}).Info("Found active jobs")
+	log.WithFields(log.Fields{"count": len(jobAds)}).Info("scanning active jobs")
 
 	// walk over ever job
 	// - check ifjob page returns 404
 	// -- set active to false
+
+	jobs404 := 0
+	jobsProcessed := 0
 
 	for i, jobAd := range jobAds {
 		delayForMonsterAPI()
@@ -53,12 +56,18 @@ func main() {
 
 		if errs != nil {
 			log.Error("Job Ad page couldn´t be loaded: ", errs)
+			continue
 		}
+		jobsProcessed++
 		if resp.StatusCode == 404 {
 			log.WithFields(log.Fields{"url": jobAd.URL}).Debug("job ad page returns 404, job ad might no longer be active")
 			db.UpdateJobActiveStatus(int(jobAd.ID), false)
+			jobs404++
 		} else if resp.StatusCode == 200 {
 			log.WithFields(log.Fields{"url": jobAd.URL}).Debug("job ad seems to be alive")
 		}
 	}
+
+	log.WithFields(log.Fields{"total-new-inactive": jobs404, "total-proccesed": jobsProcessed}).Info("finished scan")
+
 }
