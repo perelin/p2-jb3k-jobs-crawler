@@ -19,6 +19,10 @@ https://cloud.google.com/natural-language/
 https://azure.microsoft.com/en-us/services/cognitive-services/text-analytics/ 
 https://www.textrazor.com/plans
 
+# hot reload
+
+$ gin
+
 # heroku pg backups
 $ heroku pg:backups:capture
 $ heroku pg:backups:url b001
