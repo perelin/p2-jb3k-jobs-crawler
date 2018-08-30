@@ -11,6 +11,7 @@ import (
 	"strings"
 	"time"
 
+	"p2lab/recruitbot3000/pkg/db"
 	"p2lab/recruitbot3000/pkg/models"
 	"p2lab/recruitbot3000/pkg/responses"
 
@@ -25,6 +26,8 @@ import (
 
 var request = gorequest.New()
 
+var newJobs int
+
 func delayForMonsterAPI() {
 	//log.Debug("Waiting delay for api throtteling...")
 	delay, _ := strconv.Atoi(os.Getenv("DELAY"))
@@ -36,8 +39,6 @@ func scrapeJobListingsFromJSON(query string, page int) bool {
 	delayForMonsterAPI()
 
 	requestString := "https://www.monster.de/jobs/suche/pagination/?q=" + query + "&isDynamicPage=true&isMKPagination=true&page=" + strconv.Itoa(page)
-
-	log.WithField("url", requestString).Info("Request URL for Job Ad listing")
 
 	resp, _, errs := request.Get(requestString).End()
 
@@ -56,12 +57,27 @@ func scrapeJobListingsFromJSON(query string, page int) bool {
 		log.Error("Couldn´t parse Job Ad listing page: ", err)
 	}
 
-	log.WithFields(log.Fields{"page": page, "result count": len(jobList)}).Info("Received result list")
+	log.WithFields(log.Fields{"page": page, "result-count": len(jobList), "total-new-jobs": newJobs}).Info("Received result list")
 
 	for _, jobEntry := range jobList {
-		//spew.Dump(jobEntry)
-		if jobEntry.JobViewURL != "" {
-			scrapeJobAd(jobEntry, query)
+
+		if jobEntry.JobID == 0 {
+			continue
+		}
+
+		jobID := jobEntry.MusangKingID // because 'JobID' can return wrong IDs...
+
+		jobAdCount := db.GetJobWithMonsterIDCount(jobID)
+		if jobAdCount == 0 {
+			log.WithFields(log.Fields{"monster_job_id": jobID}).Debug("new job found")
+			if jobEntry.JobViewURL != "" {
+				scrapeJobAd(jobEntry, query)
+			} else {
+				log.Debug("URL is empty -> skipping ")
+			}
+		} else {
+			//log.WithFields(log.Fields{"monster_job_id": strconv.Itoa(jobEntry.JobID)}).Debug("job already in DB")
+			db.TouchLastEncounter(jobID)
 		}
 	}
 
@@ -142,6 +158,7 @@ func scrapeJobAd(jobAdEntry responses.MonsterJobAdListEntry, query string) {
 		MonsterJobID:   dataJobID,
 	}
 	saveJobAdToDB(dataJobID, adModel)
+	newJobs++
 }
 
 func saveJobAdToDB(dataJobID string, jobModel models.MonsterJobAdModel) {
@@ -233,13 +250,31 @@ func checkIfJobsAreAvailableForQuery(query string) bool {
 	return jobsAreAvailable
 }
 
-func getJobAdsForJobNames() {
+func getJobAdsForJobNamesShuffle() {
 	jobNames := getJobNames()
 	jobNamesSeq := u.From(jobNames, len(jobNames)) // shuffling names, this is a bit weird. should refactor
 	jobNamesShuffled := u.Shuffle(jobNamesSeq)
 	for _, jobName := range jobNamesShuffled {
 		jobNameAsserted := jobName.(models.MonsterJobListModel) // casting back to original type (from shuffling type)
 		query := url.QueryEscape(jobNameAsserted.Text)
+		log.WithField("Job Query", query).Info("Starting new job name query") // should be in a test if this still works
+		jobsAvailable := checkIfJobsAreAvailableForQuery(query)
+		if !jobsAvailable {
+			continue
+		}
+		continueToNextPage := true
+		for i := 1; continueToNextPage; i++ {
+			continueToNextPage = scrapeJobListingsFromJSON(query, i)
+			log.Debug("Continues to next page? ", continueToNextPage)
+		}
+	}
+}
+
+func getJobAdsForJobNames() {
+	jobNames := getJobNames()
+
+	for _, jobName := range jobNames {
+		query := url.QueryEscape(jobName.Text)
 		log.WithField("Job Query", query).Info("Starting new job name query") // should be in a test if this still works
 		jobsAvailable := checkIfJobsAreAvailableForQuery(query)
 		if !jobsAvailable {

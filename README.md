@@ -39,6 +39,7 @@ $ pg_restore -c -d rb3000 latest.dump.1
 # 2do
 
 - lastSeen bei active true check setzen / und nicht mehr bei active false
+- while crawling: check first if ID is in DB, then load/open job ad page 
 - use codly library for scraping (https://benjamincongdon.me/blog/2018/03/01/Scraping-the-Web-in-Golang-with-Colly-and-Goquery/)
 - use "available since" date diretly from job posting  
 - analytics of duplicates?

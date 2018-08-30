@@ -99,3 +99,34 @@ func UpdateJobActiveStatus(jobID int, active bool) {
 	defer db.Close()
 	db.Model(&models.MonsterJobAdModel{}).Where("id = ?", jobID).Updates(map[string]interface{}{"active": false, "last_encounter": time.Now()})
 }
+
+func GetJobWithMonsterID(monsterID string) models.MonsterJobAdModel {
+	db := initDB()
+	defer db.Close()
+
+	var jobAd models.MonsterJobAdModel
+
+	db.Where("monster_job_id = ?", monsterID).Find(&jobAd)
+
+	return jobAd
+}
+
+func GetJobWithMonsterIDCount(monsterID string) int {
+	db := initDB()
+	defer db.Close()
+
+	var jobAd models.MonsterJobAdModel
+	var count int
+	db.Where("monster_job_id = ?", monsterID).Find(&jobAd).Count(&count)
+
+	return count
+}
+
+func TouchLastEncounter(monsterID string) {
+	db := initDB()
+	defer db.Close()
+
+	var jobAd models.MonsterJobAdModel
+
+	db.Model(&jobAd).Where("monster_job_id = ?", monsterID).Update("last_encounter", time.Now)
+}
