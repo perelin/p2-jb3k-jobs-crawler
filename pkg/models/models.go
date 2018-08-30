@@ -21,6 +21,8 @@ type MonsterJobAdModel struct {
 	MonsterJobID   string
 	Query          string
 	FullHTML       string
+	Industry       string
+	DatePosted     time.Time
 	FirstEncounter time.Time
 	LastEncounter  time.Time
 	Active         bool

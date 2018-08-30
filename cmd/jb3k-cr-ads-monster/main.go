@@ -11,7 +11,8 @@ import (
 	"strings"
 	"time"
 
-	models "p2lab/recruitbot3000/pkg/models"
+	"p2lab/recruitbot3000/pkg/models"
+	"p2lab/recruitbot3000/pkg/responses"
 
 	"github.com/PuerkitoBio/goquery"
 	u "github.com/alxrm/ugo"
@@ -21,58 +22,6 @@ import (
 	"github.com/parnurzeal/gorequest"
 	log "github.com/sirupsen/logrus"
 )
-
-type monsterJobAdListResults []struct {
-	JobID                 int    `json:"JobID"`
-	Title                 string `json:"Title"`
-	TitleLink             string `json:"TitleLink"`
-	IsBolded              bool   `json:"IsBolded"`
-	DatePostedText        string `json:"DatePostedText"`
-	DatePosted            string `json:"DatePosted"`
-	LocationText          string `json:"LocationText"`
-	LocationLink          string `json:"LocationLink"`
-	JobViewURL            string `json:"JobViewUrl"`
-	ImpressionTracking    string `json:"ImpressionTracking"`
-	HasLocationAddress    bool   `json:"HasLocationAddress"`
-	IsSavedJob            bool   `json:"IsSavedJob"`
-	IsAppliedJob          bool   `json:"IsAppliedJob"`
-	IsNewJob              bool   `json:"IsNewJob"`
-	HasAdapt              bool   `json:"HasAdapt"`
-	HasProDiversity       bool   `json:"HasProDiversity"`
-	HasSpecialCommitments bool   `json:"HasSpecialCommitments"`
-	Company               struct {
-		Name              string `json:"Name"`
-		CompanyLink       string `json:"CompanyLink"`
-		HasCompanyAddress bool   `json:"HasCompanyAddress"`
-	} `json:"Company"`
-	Text                       string      `json:"Text"`
-	LocationClickJsFunction    string      `json:"LocationClickJsFunction"`
-	CompanyClickJsFunction     string      `json:"CompanyClickJsFunction"`
-	JobTitleClickJsFunction    string      `json:"JobTitleClickJsFunction"`
-	JobDescription             string      `json:"JobDescription"`
-	ApplyMethod                int         `json:"ApplyMethod"`
-	ApplyType                  string      `json:"ApplyType"`
-	IsAggregated               string      `json:"IsAggregated"`
-	CityText                   string      `json:"CityText"`
-	StateText                  string      `json:"StateText"`
-	JobDescriptionMeta         string      `json:"JobDescriptionMeta"`
-	EmploymentTypeMeta         string      `json:"EmploymentTypeMeta"`
-	IndustryTypeMeta           string      `json:"IndustryTypeMeta"`
-	JobViewURLMeta             string      `json:"JobViewUrlMeta"`
-	IsFastApply                bool        `json:"IsFastApply"`
-	Target                     interface{} `json:"Target"`
-	IsSecondaryJob             bool        `json:"IsSecondaryJob"`
-	JobIDCloud                 int         `json:"JobIdCloud"`
-	MusangKingID               string      `json:"MusangKingId"`
-	IsSecondarySearchResultJob bool        `json:"IsSecondarySearchResultJob"`
-	InlineAdIndex              int         `json:"InlineAdIndex"`
-	ShowCompanyAsLink          bool        `json:"ShowCompanyAsLink"`
-	ShowLocationAsLink         bool        `json:"ShowLocationAsLink"`
-	HideCompanyLogo            bool        `json:"HideCompanyLogo"`
-	ShowMultilocHover          bool        `json:"ShowMultilocHover"`
-	MultilocHoverTitle         interface{} `json:"MultilocHoverTitle"`
-	MultilocHover              interface{} `json:"MultilocHover"`
-}
 
 var request = gorequest.New()
 
@@ -100,7 +49,7 @@ func scrapeJobListingsFromJSON(query string, page int) bool {
 		return false
 	}
 
-	var jobList monsterJobAdListResults
+	var jobList []responses.MonsterJobAdListEntry
 
 	err := json.NewDecoder(resp.Body).Decode(&jobList)
 	if err != nil {
@@ -110,8 +59,9 @@ func scrapeJobListingsFromJSON(query string, page int) bool {
 	log.WithFields(log.Fields{"page": page, "result count": len(jobList)}).Info("Received result list")
 
 	for _, jobEntry := range jobList {
+		//spew.Dump(jobEntry)
 		if jobEntry.JobViewURL != "" {
-			scrapeJobAd(jobEntry.JobViewURL, query)
+			scrapeJobAd(jobEntry, query)
 		}
 	}
 
@@ -122,13 +72,14 @@ func scrapeJobListingsFromJSON(query string, page int) bool {
 	return true
 }
 
-func scrapeJobAd(linkURL string, query string) {
+func scrapeJobAd(jobAdEntry responses.MonsterJobAdListEntry, query string) {
 
 	delayForMonsterAPI()
 
-	log.Debug(linkURL)
+	log.Debug(jobAdEntry.JobViewURL)
 
-	res, err := http.Get(linkURL)
+	// load job ad page
+	res, err := http.Get(jobAdEntry.JobViewURL)
 	if err != nil {
 		log.Error("Couldnt load Job Ad page: ", err)
 		return
@@ -139,38 +90,53 @@ func scrapeJobAd(linkURL string, query string) {
 		return
 	}
 
+	// extract raw document
 	bodyBytes, _ := ioutil.ReadAll(res.Body)
 	res.Body = ioutil.NopCloser(bytes.NewBuffer(bodyBytes))
 	bodyText := string(bodyBytes)
 
-	// Load the HTML document
+	// extract parsed document
 	doc, err := goquery.NewDocumentFromReader(res.Body)
 	if err != nil {
 		log.Error("Couldn´t parse Job Ad page", err)
 		return
 	}
 
+	// extract job data
+	jobJSONText := doc.Find("[type='application/ld+json']").Text()
+	var jobJSON responses.JobPosting
+	err = json.NewDecoder(strings.NewReader(jobJSONText)).Decode(&jobJSON)
+	if err != nil {
+		log.Error("Couldn´t find/parse Job data JSON: ", err)
+	}
+
+	// Data collection
+	var industryList responses.IndustryList
+	industryList.Industry = jobJSON.Industry
+	industryString := responses.IndustryToJSON(industryList)
 	header := doc.Find("div#JobViewHeader")
 	title := header.Find("h1").Text()
 	subtitle := header.Find("h2").Text()
-	//fmt.Println(title)
-	//fmt.Println(subtitle)
-
 	companyBox := doc.Find("div#AboutCompany")
 	employer := companyBox.Find("h3.name").Text()
-	//fmt.Println(employer)
-
 	trackingDiv := doc.Find("div#trackingIdentification")
 	dataJobID, _ := trackingDiv.Attr("data-job-id")
+	datePosted, err := time.Parse("2006-01-02T15:04", jobAdEntry.DatePosted)
+	if err != nil {
+		log.Debug(err)
+	}
 
+	// save to db
 	adModel := models.MonsterJobAdModel{
 		Title:          title,
-		URL:            linkURL,
+		URL:            jobAdEntry.JobViewURL,
 		Location:       subtitle,
 		Employer:       employer,
 		Query:          query,
 		FullHTML:       bodyText,
 		Active:         true,
+		Industry:       industryString,
+		DatePosted:     datePosted,
 		FirstEncounter: time.Now(),
 		LastEncounter:  time.Now(),
 		MonsterJobID:   dataJobID,

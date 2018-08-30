@@ -50,7 +50,6 @@ func main() {
 		delayForMonsterAPI()
 
 		log.WithFields(log.Fields{"monsterID": jobAd.MonsterJobID, "running no": strconv.Itoa(i)}).Debug("processing new job")
-		//log.Debug("processing job no. " + strconv.Itoa(i))
 
 		resp, _, errs := request.Get(jobAd.URL).End()
 

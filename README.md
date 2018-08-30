@@ -1,3 +1,10 @@
+
+# Running
+
+go install ./...; source /Users/perelin/.zshrc
+
+# Notes
+
 https://mholt.github.io/json-to-go/
 
 https://stackoverflow.com/questions/28582728/running-heroku-rundetached-programmatically-how-exactly
@@ -31,9 +38,19 @@ $ pg_restore -c -d rb3000 latest.dump.1
 
 # 2do
 
+- lastSeen bei active true check setzen / und nicht mehr bei active false
+- use codly library for scraping (https://benjamincongdon.me/blog/2018/03/01/Scraping-the-Web-in-Golang-with-Colly-and-Goquery/)
+- use "available since" date diretly from job posting  
+- analytics of duplicates?
+
 in tests:
 - assert that job names without results have the correct negative string
 - assert that healthy job lists always have 26 entries
 
 implement throttel detection
 - when multiple monster get requests fail in a row stop and send an alert
+
+analyse
+- duplicates
+- how many new per day / query
+- how many closed per day / query?

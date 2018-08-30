@@ -25,5 +25,5 @@ func main() {
 	}
 	defer db.Close()
 
-	db.AutoMigrate(&models.MonsterJobAdModel{})
+	db.AutoMigrate(&models.MonsterJobAdModel{}, &models.MonsterJobListModel{})
 }
