@@ -97,7 +97,8 @@ func GetAllJobsFull() []models.MonsterJobAdModel {
 func UpdateJobActiveStatus(jobID int, active bool) {
 	db := initDB()
 	defer db.Close()
-	db.Model(&models.MonsterJobAdModel{}).Where("id = ?", jobID).Updates(map[string]interface{}{"active": false, "last_encounter": time.Now()})
+	//db.Model(&models.MonsterJobAdModel{}).Where("id = ?", jobID).Updates(map[string]interface{}{"active": false, "last_encounter": time.Now()})
+	db.Model(&models.MonsterJobAdModel{}).Where("id = ?", jobID).Updates(map[string]interface{}{"active": false})
 }
 
 func GetJobWithMonsterID(monsterID string) models.MonsterJobAdModel {
