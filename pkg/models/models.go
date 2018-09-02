@@ -28,3 +28,9 @@ type MonsterJobAdModel struct {
 	Active         bool
 	gorm.Model
 }
+
+type JobCrawlerEventModel struct {
+	Query            string
+	JobAdResultCount int
+	EbentTime        time.Time
+}

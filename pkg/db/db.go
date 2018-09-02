@@ -131,3 +131,28 @@ func TouchLastEncounter(monsterID string) {
 
 	db.Model(&jobAd).Where("monster_job_id = ?", monsterID).Update("last_encounter", time.Now)
 }
+
+func GetJobNames() []models.MonsterJobListModel {
+
+	db := initDB()
+	defer db.Close()
+
+	var jobNames []models.MonsterJobListModel
+
+	db.Find(&jobNames)
+
+	//fmt.Println(jobNames)
+
+	return jobNames
+	// query := url.QueryEscape("Analyst Beschaffung")
+	// fmt.Println(query)
+}
+
+func SaveJobAdToDB(dataJobID string, jobModel models.MonsterJobAdModel) {
+	db := initDB()
+	defer db.Close()
+
+	db.Where(models.MonsterJobAdModel{
+		MonsterJobID: dataJobID,
+	}).FirstOrCreate(&jobModel)
+}
