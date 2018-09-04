@@ -3,6 +3,10 @@
 
 go install ./...; source /Users/perelin/.zshrc
 
+# Logs
+
+https://apps.eu.sematext.com/ 
+
 # Notes
 
 https://mholt.github.io/json-to-go/
@@ -38,12 +42,19 @@ $ pg_restore -c -d rb3000 latest.dump.1
 
 # 2do
 
+Next todo
+query=Abrechnung, auf Website 2312 Job, auf mux-search-results nur 250... ?
++ Crawling log mit events
+
+
 - use "available since" date diretly from job posting  
 - lastSeen bei active true check setzen / und nicht mehr bei active false
 - while crawling: check first if ID is in DB, then load/open job ad page 
 - use codly library for scraping (https://benjamincongdon.me/blog/2018/03/01/Scraping-the-Web-in-Golang-with-Colly-and-Goquery/)
 
 - analytics of duplicates?
+
+- backup DB https://devcenter.heroku.com/articles/heroku-postgres-backups
 
 in tests:
 - assert that job names without results have the correct negative string

@@ -36,7 +36,8 @@ func getJobAdsForJobNames() {
 
 	for _, jobName := range jobNames {
 		query := url.QueryEscape(jobName.Text)
-		expectedResults = GetTotalResultsForQuery(query)
+		//expectedResults = GetTotalResultsForQuery(query)
+		expectedResults = GetTotalResultsForQueryFromHTML(query)
 		log.WithFields(log.Fields{"Job Query": query, "expectedResults": expectedResults}).Info("Starting new job name query")
 		jobsAvailable := checkIfJobsAreAvailableForQuery(query)
 		if !jobsAvailable {
