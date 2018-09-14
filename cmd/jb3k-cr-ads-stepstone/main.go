@@ -170,7 +170,7 @@ func scanSingleJobName(query string) {
 
 		offset = offset + resultCount
 
-		logger.WithFields(log.Fields{"new offset": offset, "results found": resultCount}).Debug("finished result page")
+		logger.WithFields(log.Fields{"new offset": offset, "results found": resultCount}).Info("finished result page")
 
 		//fmt.Println(resultCount)
 

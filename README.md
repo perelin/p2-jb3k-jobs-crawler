@@ -89,7 +89,7 @@ analyse
 
 ### 01 added Stepstone
 
-00: stop everything
+00: stop everything + BACKUPDB!!
 
 01: psql: ALTER TABLE monster_job_ad_models RENAME COLUMN monster_job_id TO job_source_id;
 
