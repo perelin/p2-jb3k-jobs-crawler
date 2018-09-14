@@ -30,14 +30,14 @@ func scrapeJobListingsFromJSON(query string, page int) bool {
 
 		jobAdCount := db.GetJobWithMonsterIDCount(jobID) // check if job already in DB
 		if jobAdCount == 0 {
-			log.WithFields(log.Fields{"monster_job_id": jobID}).Debug("new job found")
+			log.WithFields(log.Fields{"job_id": jobID}).Debug("new job found")
 			if jobEntry.JobViewURL != "" {
 				scrapeJobAd(jobEntry, query)
 			} else {
 				log.Debug("URL is empty -> skipping ")
 			}
 		} else {
-			//log.WithFields(log.Fields{"monster_job_id": strconv.Itoa(jobEntry.JobID)}).Debug("job already in DB")
+			//log.WithFields(log.Fields{"job_id": strconv.Itoa(jobEntry.JobID)}).Debug("job already in DB")
 			db.TouchLastEncounter(jobID)
 		}
 	}

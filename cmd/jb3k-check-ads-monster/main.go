@@ -49,7 +49,7 @@ func main() {
 	for i, jobAd := range jobAds {
 		delayForMonsterAPI()
 
-		log.WithFields(log.Fields{"monsterID": jobAd.MonsterJobID, "running no": strconv.Itoa(i)}).Debug("processing new job")
+		log.WithFields(log.Fields{"monsterID": jobAd.JobSourceID, "running no": strconv.Itoa(i)}).Debug("processing new job")
 
 		resp, _, errs := request.Get(jobAd.URL).End()
 
@@ -64,7 +64,7 @@ func main() {
 			jobs404++
 		} else if resp.StatusCode == 200 {
 			log.WithFields(log.Fields{"url": jobAd.URL}).Debug("job ad seems to be alive")
-			db.TouchLastEncounter(jobAd.MonsterJobID)
+			db.TouchLastEncounter(jobAd.JobSourceID)
 		}
 	}
 

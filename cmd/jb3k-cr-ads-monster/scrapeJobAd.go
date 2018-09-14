@@ -83,7 +83,8 @@ func scrapeJobAd(jobAdEntry responses.MonsterJobAdListEntry, query string) {
 		DatePosted:     datePosted,
 		FirstEncounter: time.Now(),
 		LastEncounter:  time.Now(),
-		MonsterJobID:   dataJobID,
+		JobSourceID:    dataJobID,
+		JobSource:      "monster",
 	}
 	db.SaveJobAdToDB(dataJobID, adModel)
 	newJobs++

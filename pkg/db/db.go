@@ -66,17 +66,17 @@ func GetAllJobs(active bool) []models.MonsterJobAdModel {
 	if os.Getenv("ENVIRONMENT") == "production" {
 
 		if active {
-			db.Select("id, title, url, monster_job_id, first_encounter, last_encounter, active").Where("active = ?", active).Find(&jobAds)
+			db.Select("id, title, url, job_source_id, first_encounter, last_encounter, active").Where("active = ?", active).Find(&jobAds)
 		} else {
-			db.Select("id, title, url, monster_job_id, first_encounter, last_encounter, active").Find(&jobAds)
+			db.Select("id, title, url, job_source_id, first_encounter, last_encounter, active").Find(&jobAds)
 		}
 	} else {
 		if active {
-			db.Select("id, title, url, monster_job_id, first_encounter, last_encounter, active").Where("active = ?", active).Limit(5).Find(&jobAds)
+			db.Select("id, title, url, job_source_id, first_encounter, last_encounter, active").Where("active = ?", active).Limit(5).Find(&jobAds)
 		} else {
-			db.Select("id, title, url, monster_job_id, first_encounter, last_encounter, active").Limit(5).Find(&jobAds)
+			db.Select("id, title, url, job_source_id, first_encounter, last_encounter, active").Limit(5).Find(&jobAds)
 		}
-		//db.Select("id, title, url, monster_job_id, first_encounter, last_encounter, active").Where("id = ?", 534).Limit(30).Find(&jobAds)
+		//db.Select("id, title, url, job_source_id, first_encounter, last_encounter, active").Where("id = ?", 534).Limit(30).Find(&jobAds)
 	}
 
 	return jobAds
@@ -107,7 +107,7 @@ func GetJobWithMonsterID(monsterID string) models.MonsterJobAdModel {
 
 	var jobAd models.MonsterJobAdModel
 
-	db.Where("monster_job_id = ?", monsterID).Find(&jobAd)
+	db.Where("job_source_id = ?", monsterID).Find(&jobAd)
 
 	return jobAd
 }
@@ -118,7 +118,7 @@ func GetJobWithMonsterIDCount(monsterID string) int {
 
 	var jobAd models.MonsterJobAdModel
 	var count int
-	db.Where("monster_job_id = ?", monsterID).Find(&jobAd).Count(&count)
+	db.Where("job_source_id = ?", monsterID).Find(&jobAd).Count(&count)
 
 	return count
 }
@@ -129,7 +129,7 @@ func TouchLastEncounter(monsterID string) {
 
 	var jobAd models.MonsterJobAdModel
 
-	db.Model(&jobAd).Where("monster_job_id = ?", monsterID).Update("last_encounter", time.Now)
+	db.Model(&jobAd).Where("job_source_id = ?", monsterID).Update("last_encounter", time.Now)
 }
 
 func GetJobNames() []models.MonsterJobListModel {
@@ -153,6 +153,6 @@ func SaveJobAdToDB(dataJobID string, jobModel models.MonsterJobAdModel) {
 	defer db.Close()
 
 	db.Where(models.MonsterJobAdModel{
-		MonsterJobID: dataJobID,
+		JobSourceID: dataJobID,
 	}).FirstOrCreate(&jobModel)
 }

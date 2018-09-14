@@ -105,7 +105,7 @@ func main() {
 	for i, jobAd := range jobAds {
 		delayForMonsterAPI()
 
-		log.WithFields(log.Fields{"monsterID": jobAd.MonsterJobID, "running no": strconv.Itoa(i)}).Debug("processing new job")
+		log.WithFields(log.Fields{"monsterID": jobAd.JobSourceID, "running no": strconv.Itoa(i)}).Debug("processing new job")
 
 		extractDatePosted(jobAd)
 

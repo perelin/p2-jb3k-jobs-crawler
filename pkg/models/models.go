@@ -18,7 +18,8 @@ type MonsterJobAdModel struct {
 	URL            string
 	Location       string
 	Employer       string
-	MonsterJobID   string
+	JobSource      string
+	JobSourceID    string
 	Query          string
 	FullHTML       string
 	Industry       string

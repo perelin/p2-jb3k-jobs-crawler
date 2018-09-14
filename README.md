@@ -3,6 +3,10 @@
 
 go install ./...; source /Users/perelin/.zshrc
 
+OR
+
+make
+
 # Logs
 
 https://apps.eu.sematext.com/ 
@@ -30,6 +34,15 @@ https://cloud.google.com/natural-language/
 https://azure.microsoft.com/en-us/services/cognitive-services/text-analytics/ 
 https://www.textrazor.com/plans
 
+https://benjamincongdon.me/blog/2018/03/01/Scraping-the-Web-in-Golang-with-Colly-and-Goquery/
+
+https://stackoverflow.com/questions/42386975/heroku-postgresql-with-google-datastudio
+
+INteresting: https://www.scraperapi.com/pricing
+
+http://www.postgresqltutorial.com/postgresql-rename-column/
+
+
 # hot reload
 
 $ gin
@@ -41,6 +54,10 @@ $ heroku pg:backups:download
 $ pg_restore -c -d rb3000 latest.dump.1
 
 # 2do
+
+https://www.scraperapi.com/?utm_source=opencollective&utm_medium=github&utm_campaign=colly
+
+better logging: welcher job erzeugt den Eintrag?
 
 Next todo
 query=Abrechnung, auf Website 2312 Job, auf mux-search-results nur 250... ?
@@ -67,3 +84,15 @@ analyse
 - duplicates
 - how many new per day / query
 - how many closed per day / query?
+
+## Migrations
+
+### 01 added Stepstone
+
+00: stop everything
+
+01: psql: ALTER TABLE monster_job_ad_models RENAME COLUMN monster_job_id TO job_source_id;
+
+02: Automigrate (creates job_source)
+
+03: psql: UPDATE monster_job_ad_models SET job_source = 'monster';
