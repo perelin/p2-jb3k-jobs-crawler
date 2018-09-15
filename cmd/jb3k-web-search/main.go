@@ -13,7 +13,8 @@ import (
 func setupRouter() *gin.Engine {
 
 	r := gin.Default()
-	r.LoadHTMLGlob("templates/*")
+	r.Use(gin.Logger())
+	r.LoadHTMLGlob("templates/*.tmpl.html")
 
 	r.GET("/status", func(c *gin.Context) {
 		count := db.GetJobAdCount("monster")
@@ -31,7 +32,7 @@ func setupRouter() *gin.Engine {
 		ssEntries := db.GetJobAdCount("stepstone")
 		ssLastEntryTime := db.GetLastEntryDate("stepstone")
 		ssLastEntryString := ssLastEntryTime.String()
-		c.HTML(http.StatusOK, "status.html", gin.H{
+		c.HTML(http.StatusOK, "status.tmpl.html", gin.H{
 			"monsterEntries":   monsterEntries,
 			"monsterLastEntry": monsterLastEntryString,
 			"ssEntries":        ssEntries,
