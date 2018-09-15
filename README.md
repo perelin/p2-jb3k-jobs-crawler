@@ -85,6 +85,13 @@ analyse
 - how many new per day / query
 - how many closed per day / query?
 
+## Scan Loop
+
+- read complete ad list (paginated)
+- check for sources IDs in URLs/entries
+- check if IDs are in DB
+- if in DB
+
 ## Migrations
 
 ### 01 added Stepstone
@@ -96,3 +103,5 @@ analyse
 02: Automigrate (creates job_source)
 
 03: psql: UPDATE monster_job_ad_models SET job_source = 'monster';
+
+

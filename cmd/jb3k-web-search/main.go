@@ -1,6 +1,7 @@
 package main
 
 import (
+	"fmt"
 	"log"
 	"net/http"
 	"os"
@@ -10,6 +11,13 @@ import (
 	"github.com/gin-gonic/gin"
 )
 
+func printDir() {
+	dir, err := os.Getwd()
+	if err != nil {
+		log.Fatal(err)
+	}
+	fmt.Println(dir)
+}
 func setupRouter() *gin.Engine {
 
 	r := gin.Default()
@@ -49,6 +57,7 @@ func setupRouter() *gin.Engine {
 }
 
 func main() {
+	printDir()
 	port := os.Getenv("PORT")
 
 	if port == "" {
