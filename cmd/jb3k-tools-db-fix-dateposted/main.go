@@ -1,9 +1,7 @@
 package main
 
 import (
-	"fmt"
 	"os"
-	db "p2lab/recruitbot3000/pkg/db"
 	"p2lab/recruitbot3000/pkg/models"
 	"strconv"
 	"strings"
@@ -92,41 +90,41 @@ func extractDatePosted(jobAd models.MonsterJobAdModel) {
 	spew.Dump(title)
 }
 
-func main() {
-	lastEntryTime := db.GetLastEntryDate()
-	fmt.Println(lastEntryTime)
-	jobAds := db.GetAllJobsFull()
+// func main() {
+// 	lastEntryTime := db.GetLastEntryDate("")
+// 	fmt.Println(lastEntryTime)
+// 	jobAds := db.GetAllJobsFull()
 
-	log.WithFields(log.Fields{"count": len(jobAds)}).Info("scanning jobs")
+// 	log.WithFields(log.Fields{"count": len(jobAds)}).Info("scanning jobs")
 
-	jobs404 := 0
-	jobsProcessed := 0
+// 	jobs404 := 0
+// 	jobsProcessed := 0
 
-	for i, jobAd := range jobAds {
-		delayForMonsterAPI()
+// 	for i, jobAd := range jobAds {
+// 		delayForMonsterAPI()
 
-		log.WithFields(log.Fields{"monsterID": jobAd.JobSourceID, "running no": strconv.Itoa(i)}).Debug("processing new job")
+// 		log.WithFields(log.Fields{"monsterID": jobAd.JobSourceID, "running no": strconv.Itoa(i)}).Debug("processing new job")
 
-		extractDatePosted(jobAd)
+// 		extractDatePosted(jobAd)
 
-		// resp, _, errs := request.Get(jobAd.URL).End()
+// 		// resp, _, errs := request.Get(jobAd.URL).End()
 
-		// if errs != nil {
-		// 	log.Error("Job Ad page couldn´t be loaded: ", errs)
-		// 	continue
-		// }
+// 		// if errs != nil {
+// 		// 	log.Error("Job Ad page couldn´t be loaded: ", errs)
+// 		// 	continue
+// 		// }
 
-		// jobsProcessed++
+// 		// jobsProcessed++
 
-		// if resp.StatusCode == 404 {
-		// 	log.WithFields(log.Fields{"url": jobAd.URL}).Debug("job ad page returns 404, job ad might no longer be active")
-		// 	//db.UpdateJobActiveStatus(int(jobAd.ID), false)
-		// 	jobs404++
-		// } else if resp.StatusCode == 200 {
-		// 	log.WithFields(log.Fields{"url": jobAd.URL}).Debug("job ad seems to be alive")
-		// 	extractDatePosted(jobAd)
-		// }
-	}
+// 		// if resp.StatusCode == 404 {
+// 		// 	log.WithFields(log.Fields{"url": jobAd.URL}).Debug("job ad page returns 404, job ad might no longer be active")
+// 		// 	//db.UpdateJobActiveStatus(int(jobAd.ID), false)
+// 		// 	jobs404++
+// 		// } else if resp.StatusCode == 200 {
+// 		// 	log.WithFields(log.Fields{"url": jobAd.URL}).Debug("job ad seems to be alive")
+// 		// 	extractDatePosted(jobAd)
+// 		// }
+// 	}
 
-	log.WithFields(log.Fields{"total-new-inactive": jobs404, "total-proccesed": jobsProcessed}).Info("finished scan")
-}
+// 	log.WithFields(log.Fields{"total-new-inactive": jobs404, "total-proccesed": jobsProcessed}).Info("finished scan")
+// }
