@@ -128,3 +128,7 @@ func extractDatePosted(jobAd models.MonsterJobAdModel) {
 
 // 	log.WithFields(log.Fields{"total-new-inactive": jobs404, "total-proccesed": jobsProcessed}).Info("finished scan")
 // }
+
+func main() {
+	return
+}
