@@ -22,7 +22,7 @@ func setupRouter() *gin.Engine {
 
 	r := gin.Default()
 	r.Use(gin.Logger())
-	r.LoadHTMLGlob("../templates/*.tmpl.html")
+	r.LoadHTMLGlob(os.Getenv("HEROKU_STATIC_PATH") + "templates/*.tmpl.html")
 
 	r.GET("/status", func(c *gin.Context) {
 		count := db.GetJobAdCount("monster")
