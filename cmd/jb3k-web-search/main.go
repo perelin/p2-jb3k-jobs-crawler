@@ -24,21 +24,21 @@ func setupRouter() *gin.Engine {
 		c.String(http.StatusOK, reply)
 	})
 
-	r.GET("/", func(c *gin.Context) {
+	// r.GET("/", func(c *gin.Context) {
 
-		monsterEntries := db.GetJobAdCount("monster")
-		monsterLastEntryTime := db.GetLastEntryDate("monster")
-		monsterLastEntryString := monsterLastEntryTime.String()
-		ssEntries := db.GetJobAdCount("stepstone")
-		ssLastEntryTime := db.GetLastEntryDate("stepstone")
-		ssLastEntryString := ssLastEntryTime.String()
-		c.HTML(http.StatusOK, "status.tmpl.html", gin.H{
-			"monsterEntries":   monsterEntries,
-			"monsterLastEntry": monsterLastEntryString,
-			"ssEntries":        ssEntries,
-			"ssLastEntry":      ssLastEntryString,
-		})
-	})
+	// 	monsterEntries := db.GetJobAdCount("monster")
+	// 	monsterLastEntryTime := db.GetLastEntryDate("monster")
+	// 	monsterLastEntryString := monsterLastEntryTime.String()
+	// 	ssEntries := db.GetJobAdCount("stepstone")
+	// 	ssLastEntryTime := db.GetLastEntryDate("stepstone")
+	// 	ssLastEntryString := ssLastEntryTime.String()
+	// 	c.HTML(http.StatusOK, "status.tmpl.html", gin.H{
+	// 		"monsterEntries":   monsterEntries,
+	// 		"monsterLastEntry": monsterLastEntryString,
+	// 		"ssEntries":        ssEntries,
+	// 		"ssLastEntry":      ssLastEntryString,
+	// 	})
+	// })
 
 	// Ping test
 	r.GET("/ping2", func(c *gin.Context) {
