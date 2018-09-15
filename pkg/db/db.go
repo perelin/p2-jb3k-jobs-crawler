@@ -33,26 +33,26 @@ func initDB() *gorm.DB {
 	return db
 }
 
-func GetLastEntryDate() time.Time {
+func GetLastEntryDate(source string) time.Time {
 	db := initDB()
 	defer db.Close()
 
 	var lastJobAd models.MonsterJobAdModel
 
-	db.Last(&lastJobAd)
+	db.Where("job_source = ?", source).Last(&lastJobAd)
 
 	//fmt.Println(lastJobAd.CreatedAt)
 
 	return lastJobAd.CreatedAt
 }
 
-func GetJobAdCount() int {
+func GetJobAdCount(source string) int {
 	db := initDB()
 	defer db.Close()
 
 	var count int
 
-	db.Model(&models.MonsterJobAdModel{}).Count(&count)
+	db.Model(&models.MonsterJobAdModel{}).Where("job_source = ?", source).Count(&count)
 
 	return count
 }

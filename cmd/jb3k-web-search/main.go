@@ -11,16 +11,32 @@ import (
 )
 
 func setupRouter() *gin.Engine {
-	// Disable Console Color
-	// gin.DisableConsoleColor()
+
 	r := gin.Default()
+	r.LoadHTMLGlob("templates/*")
 
 	r.GET("/status", func(c *gin.Context) {
-		count := db.GetJobAdCount()
-		lastEntryTime := db.GetLastEntryDate()
+		count := db.GetJobAdCount("monster")
+		lastEntryTime := db.GetLastEntryDate("monster")
 		lastEntryTimeString := lastEntryTime.String()
 		reply := "Total entries: " + strconv.Itoa(count) + "\nLast entry time: " + lastEntryTimeString
 		c.String(http.StatusOK, reply)
+	})
+
+	r.GET("/", func(c *gin.Context) {
+
+		monsterEntries := db.GetJobAdCount("monster")
+		monsterLastEntryTime := db.GetLastEntryDate("monster")
+		monsterLastEntryString := monsterLastEntryTime.String()
+		ssEntries := db.GetJobAdCount("stepstone")
+		ssLastEntryTime := db.GetLastEntryDate("stepstone")
+		ssLastEntryString := ssLastEntryTime.String()
+		c.HTML(http.StatusOK, "status.html", gin.H{
+			"monsterEntries":   monsterEntries,
+			"monsterLastEntry": monsterLastEntryString,
+			"ssEntries":        ssEntries,
+			"ssLastEntry":      ssLastEntryString,
+		})
 	})
 
 	// Ping test
