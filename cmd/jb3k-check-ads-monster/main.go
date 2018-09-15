@@ -33,7 +33,7 @@ func delayForMonsterAPI() {
 }
 
 func main() {
-	lastEntryTime := db.GetLastEntryDate()
+	lastEntryTime := db.GetLastEntryDate("monster")
 	fmt.Println(lastEntryTime)
 	jobAds := db.GetAllJobs(true)
 
