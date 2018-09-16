@@ -1,7 +1,6 @@
 package main
 
 import (
-	"fmt"
 	"net/url"
 	"os"
 	"p2lab/recruitbot3000/pkg/db"
@@ -29,33 +28,7 @@ func init() {
 	logger = log.WithFields(log.Fields{"task": "cr-ads-stepstone"})
 }
 
-func collyDemo() {
-	// Instantiate default collector
-	c := colly.NewCollector(
-		// Visit only domains: hackerspaces.org, wiki.hackerspaces.org
-		colly.AllowedDomains("hackerspaces.org", "wiki.hackerspaces.org"),
-	)
-
-	// On every a element which has href attribute call callback
-	c.OnHTML("a[href]", func(e *colly.HTMLElement) {
-		link := e.Attr("href")
-		// Print link
-		fmt.Printf("Link found: %q -> %s\n", e.Text, link)
-		// Visit link found on page
-		// Only those links are visited which are in AllowedDomains
-		c.Visit(e.Request.AbsoluteURL(link))
-	})
-
-	// Before making a request print "Visiting ..."
-	c.OnRequest(func(r *colly.Request) {
-		fmt.Println("Visiting", r.URL.String())
-	})
-
-	// Start scraping on https://hackerspaces.org
-	c.Visit("https://hackerspaces.org/")
-}
-
-func getJobDetails(adURL string, query string) {
+func getJobDetailsPage(adURL string, query string) {
 
 	var respBody []byte
 
@@ -73,7 +46,7 @@ func getJobDetails(adURL string, query string) {
 
 		db.SaveJobAdToDB(adModel.JobSourceID, adModel)
 
-		logger.WithFields(log.Fields{"ad title": adModel.Title}).Debug("found job ad")
+		logger.WithFields(log.Fields{"ad title": adModel.Title}).Debug("job ad details")
 
 	})
 
@@ -126,6 +99,14 @@ func getStepstoneIDFromAlternateURL(url string) string {
 	return ssID
 }
 
+func getStepstoneIDFromURL(detailsPageURL string) string {
+	var ssID string
+	parsedURL, _ := url.Parse(detailsPageURL)
+	pathSplit := strings.Split(parsedURL.Path, "-")
+	ssID = pathSplit[len(pathSplit)-2]
+	return ssID
+}
+
 func getResultList(listURL string, query string) int {
 
 	resultCount := 0
@@ -135,7 +116,20 @@ func getResultList(listURL string, query string) int {
 
 	c.OnHTML("div.job-element-row", func(e *colly.HTMLElement) {
 		resultCount++
-		getJobDetails(e.ChildAttr("div.job-element__body a", "href"), query)
+
+		detailsPageURL := e.ChildAttr("div.job-element__body a", "href")
+
+		// check if in DB
+		ssID := getStepstoneIDFromURL(detailsPageURL)
+
+		if db.IsJobInDB(ssID, "stepstone") {
+			logger.WithFields(log.Fields{"id": ssID, "job query": query}).Debug("job ad already in db")
+			return
+		}
+
+		logger.WithFields(log.Fields{"id": ssID, "job query": query}).Debug("found new job ad")
+
+		getJobDetailsPage(detailsPageURL, query)
 	})
 	c.OnResponse(func(r *colly.Response) {
 		//fmt.Println("Visited", r.Body)
@@ -170,7 +164,7 @@ func scanSingleJobName(query string) {
 
 		offset = offset + resultCount
 
-		logger.WithFields(log.Fields{"new offset": offset, "results found": resultCount}).Info("finished result page")
+		logger.WithFields(log.Fields{"job query": query, "new offset": offset, "results found": resultCount}).Info("finished result page")
 
 		//fmt.Println(resultCount)
 

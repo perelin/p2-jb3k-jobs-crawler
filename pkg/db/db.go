@@ -156,3 +156,20 @@ func SaveJobAdToDB(dataJobID string, jobModel models.MonsterJobAdModel) {
 		JobSourceID: dataJobID,
 	}).FirstOrCreate(&jobModel)
 }
+
+func IsJobInDB(dataJobID string, source string) bool {
+	isJobInDB := false
+
+	db := initDB()
+	defer db.Close()
+
+	var jobAd models.MonsterJobAdModel
+
+	db.Where("job_source_id = ? AND job_source = ?", dataJobID, source).Find(&jobAd)
+
+	if (jobAd != models.MonsterJobAdModel{}) {
+		isJobInDB = true
+	}
+
+	return isJobInDB
+}
