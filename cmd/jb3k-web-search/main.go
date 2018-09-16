@@ -17,6 +17,7 @@ func printDir() {
 		log.Fatal(err)
 	}
 	fmt.Println(dir)
+	log.Println(dir)
 }
 func setupRouter() *gin.Engine {
 
