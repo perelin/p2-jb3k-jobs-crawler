@@ -64,7 +64,7 @@ func main() {
 			jobs404++
 		} else if resp.StatusCode == 200 {
 			log.WithFields(log.Fields{"url": jobAd.URL}).Debug("job ad seems to be alive")
-			db.TouchLastEncounter(jobAd.JobSourceID)
+			db.TouchLastEncounter(jobAd.JobSourceID, "monster")
 		}
 	}
 

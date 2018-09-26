@@ -11,10 +11,116 @@ import (
 
 	"github.com/gocolly/colly"
 	"github.com/joho/godotenv"
+	"github.com/satori/go.uuid"
 	log "github.com/sirupsen/logrus"
 )
 
 var logger *log.Entry
+var taskID string
+
+type stepstone struct {
+}
+
+func (s stepstone) getJobAdListForQuery(query string) []models.MonsterJobAdModel {
+
+	url := "https://www.stepstone.de/5/ergebnisliste.html?an=paging_next&rsearch=1&ke=" + url.QueryEscape(query)
+
+	var jobAdURLs []models.MonsterJobAdModel
+
+	offset := 0
+
+	c := colly.NewCollector()
+
+	//c := colly.NewCollector(colly.Debugger(&debug.LogDebugger{}))
+
+	c.OnHTML("div.job-elements-list", func(e *colly.HTMLElement) {
+
+		e.ForEach("div.job-element-row", func(i int, e2 *colly.HTMLElement) {
+
+			detailsPageURL := e2.ChildAttr("div.job-element__body a", "href")
+
+			title := e2.ChildText("h2.job-element__body__title")
+			ssID := getStepstoneIDFromURL(detailsPageURL)
+
+			jobAdURLs = append(jobAdURLs, models.MonsterJobAdModel{
+				URL:         detailsPageURL,
+				JobSource:   "stepstone",
+				JobSourceID: ssID,
+				Title:       title,
+				Query:       query,
+			})
+
+			logger.WithFields(log.Fields{"id": ssID, "job query": query, "title": title}).Debug("found job ad")
+
+		})
+
+		offset = len(jobAdURLs)
+		offsetURL := url + "&of=" + strconv.Itoa(offset)
+		e.Request.Visit(offsetURL)
+	})
+	c.OnResponse(func(r *colly.Response) {
+		//fmt.Println("Visited", r.Body)
+	})
+	c.OnRequest(func(r *colly.Request) {
+		logger.WithFields(log.Fields{"url": r.URL.String()}).Debug("crawling new result page")
+	})
+
+	c.OnScraped(func(r *colly.Response) {
+		//fmt.Println("Finished", r.Request.URL)
+	})
+
+	c.Visit(url)
+
+	return jobAdURLs
+}
+
+func (s stepstone) splitJobAdList(jobAds []models.MonsterJobAdModel) ([]models.MonsterJobAdModel, []models.MonsterJobAdModel) {
+
+	var newJobAds []models.MonsterJobAdModel
+	var existingJobAds []models.MonsterJobAdModel
+
+	for _, jobAd := range jobAds {
+		//sourceID := getStepstoneIDFromURL(jobAd.URL)
+		//fmt.Println(jobAd.JobSourceID)
+		//fmt.Println(db.IsJobInDB(jobAd.JobSourceID, jobAd.JobSource))
+
+		if db.IsJobInDB(jobAd.JobSourceID, jobAd.JobSource) {
+			existingJobAds = append(existingJobAds, jobAd)
+		} else {
+			newJobAds = append(newJobAds, jobAd)
+		}
+	}
+
+	return newJobAds, existingJobAds
+}
+
+func (s stepstone) saveNewJobAds(jobAds []models.MonsterJobAdModel) {
+	if len(jobAds) == 0 {
+		return
+	}
+	for _, jobAd := range jobAds {
+		getJobDetailsPage(jobAd.URL, jobAd.Query)
+	}
+	logger.WithFields(log.Fields{
+		"count-total": len(jobAds),
+		"query":       jobAds[1].Query}).Info(
+		"saved new jobs to db")
+}
+
+func (s stepstone) updateExistingJobAds(jobAds []models.MonsterJobAdModel) {
+	if len(jobAds) == 0 {
+		return
+	}
+	for _, jobAd := range jobAds {
+		db.TouchLastEncounter(jobAd.JobSourceID, "stepstone")
+	}
+	logger.WithFields(log.Fields{
+		"count-total": len(jobAds),
+		"query":       jobAds[1].Query}).Info(
+		"'last seen' timestamp of existing jobs was updated")
+}
+
+//-----------
 
 func init() {
 
@@ -25,7 +131,8 @@ func init() {
 
 	logLevel, _ := log.ParseLevel(os.Getenv("LOG_LEVEL"))
 	log.SetLevel(logLevel)
-	logger = log.WithFields(log.Fields{"task": "cr-ads-stepstone"})
+	taskID = uuid.Must(uuid.NewV4()).String()
+	logger = log.WithFields(log.Fields{"z-task": "cr-ads-stepstone", "z-task-id": taskID}) // z is used so the entry will appear at the end of the log line
 }
 
 func getJobDetailsPage(adURL string, query string) {
@@ -44,10 +151,9 @@ func getJobDetailsPage(adURL string, query string) {
 		adModel.Query = query
 		adModel.FullHTML = string(respBody)
 
+		logger.WithFields(log.Fields{"ad title": adModel.Title, "query": query}).Debug("adding job to db")
+
 		db.SaveJobAdToDB(adModel.JobSourceID, adModel)
-
-		logger.WithFields(log.Fields{"ad title": adModel.Title}).Debug("job ad details")
-
 	})
 
 	c.Visit(adURL)
@@ -107,93 +213,58 @@ func getStepstoneIDFromURL(detailsPageURL string) string {
 	return ssID
 }
 
-func getResultList(listURL string, query string) int {
-
-	resultCount := 0
-
-	c := colly.NewCollector()
-	//c := colly.NewCollector(colly.Debugger(&debug.LogDebugger{}))
-
-	c.OnHTML("div.job-element-row", func(e *colly.HTMLElement) {
-		resultCount++
-
-		detailsPageURL := e.ChildAttr("div.job-element__body a", "href")
-
-		// check if in DB
-		ssID := getStepstoneIDFromURL(detailsPageURL)
-
-		if db.IsJobInDB(ssID, "stepstone") {
-			logger.WithFields(log.Fields{"id": ssID, "job query": query}).Debug("job ad already in db")
-			return
-		}
-
-		logger.WithFields(log.Fields{"id": ssID, "job query": query}).Debug("found new job ad")
-
-		getJobDetailsPage(detailsPageURL, query)
-	})
-	c.OnResponse(func(r *colly.Response) {
-		//fmt.Println("Visited", r.Body)
-	})
-	c.OnRequest(func(r *colly.Request) {
-		logger.WithFields(log.Fields{"url": r.URL.String()}).Debug("crawling new result page")
-	})
-
-	c.OnScraped(func(r *colly.Response) {
-		//fmt.Println("Finished", r.Request.URL)
-	})
-
-	c.Visit(listURL)
-
-	return resultCount
-}
-
-func scanSingleJobName(query string) {
-
-	logger.WithFields(log.Fields{"job query": query}).Info("starting new job name query")
-
-	offset := 0
-	queryEscaped := url.QueryEscape(query)
-	resultCount := 1
-
-	for resultCount != 0 {
-
-		//url := "https://www.stepstone.de/5/ergebnisliste.html?ke=" + queryEscaped
-		url := "https://www.stepstone.de/5/ergebnisliste.html?&rsearch=1&of=" + strconv.Itoa(offset) + "&ke=" + queryEscaped
-
-		resultCount = getResultList(url, queryEscaped)
-
-		offset = offset + resultCount
-
-		logger.WithFields(log.Fields{"job query": query, "new offset": offset, "results found": resultCount}).Info("finished result page")
-
-		//fmt.Println(resultCount)
-
-		//break
-	}
-
-	logger.WithFields(log.Fields{"job query": query, "total results": offset}).Info("finished job name query")
-}
-
 func scanOverJobNames() {
-	jobNames := db.GetJobNames()
+
+	ss := stepstone{}
+
+	//jobNames := db.GetJobNames()
+	jobNames := db.GetReducedJobNames()
+
+	//jobNames := []models.MonsterJobListModel{models.MonsterJobListModel{Text: "Produktionsoptimierer/in"}}
+	//jobNames := []models.MonsterJobListModel{models.MonsterJobListModel{Text: "ABAP"}}
+	//jobNames := []models.MonsterJobListModel{models.MonsterJobListModel{Text: "PHP"}}
 
 	for _, jobName := range jobNames {
 
-		query := url.QueryEscape(jobName.Text)
-		scanSingleJobName(query)
+		jobAdURLs := ss.getJobAdListForQuery(jobName.Text)
+		newJobAds, existingJobAds := ss.splitJobAdList(jobAdURLs)
+
+		logger.WithFields(log.Fields{
+			"count-total":    len(jobAdURLs),
+			"count-new":      len(newJobAds),
+			"count-existing": len(existingJobAds),
+			"query":          jobName.Text}).Info(
+			"finished job ad query crawl")
+
+		db.SaveJobAdCrawlerEvent(models.JobAdCrawlerEventModel{
+			JobSource:                "stepstone",
+			EventTime:                time.Now(),
+			JobAdResultCountTotal:    len(jobAdURLs),
+			JobAdResultCountNew:      len(newJobAds),
+			JobAdResultCountExisting: len(existingJobAds),
+			Query:                    jobName.Text,
+			TaskID:                   taskID,
+		})
+
+		ss.saveNewJobAds(newJobAds)
+		ss.updateExistingJobAds(existingJobAds)
 	}
 }
 
-// next up:
-// /count hits and increase offset
-// /break after 0 results
-// get Stepstone Job Names (and other stuff)
-// /adapt Databases
-// save results
-// check for delays
-
 func main() {
+
 	scanOverJobNames()
+
+	//ss := stepstone{}
+	//jobAdURLs := ss.getJobAdListForQuery("php")
+
+	//fmt.Println(jobAdURLs)
+
+	//spew.Dump(ss.getJobAdListForQuery("php"))
+
+	//jobAdURLs := collyScraperTest("php")
+	//fmt.Println(len(jobAdURLs))
+
 	//scanSingleJobName("Produktionsoptimierer/in")
 	//scanSingleJobName("java")
 

@@ -123,13 +123,13 @@ func GetJobWithMonsterIDCount(monsterID string) int {
 	return count
 }
 
-func TouchLastEncounter(monsterID string) {
+func TouchLastEncounter(dataJobID string, source string) {
 	db := initDB()
 	defer db.Close()
 
 	var jobAd models.MonsterJobAdModel
 
-	db.Model(&jobAd).Where("job_source_id = ?", monsterID).Update("last_encounter", time.Now)
+	db.Model(&jobAd).Where("job_source_id = ? AND job_source = ?", dataJobID, source).Update("last_encounter", time.Now)
 }
 
 func GetJobNames() []models.MonsterJobListModel {
@@ -148,6 +148,44 @@ func GetJobNames() []models.MonsterJobListModel {
 	// fmt.Println(query)
 }
 
+func GetReducedJobNames() []models.MonsterJobListModel {
+
+	var jobNames []models.MonsterJobListModel
+	tiobeList := []string{
+		"Java",
+		"C",
+		"Python",
+		"C++",
+		"Visual Basic .NET",
+		"C#",
+		"PHP",
+		"JavaScript",
+		"SQL",
+		"Objective-C",
+		"Delphi/Object Pascal",
+		"Ruby",
+		"MATLAB",
+		"Assembly language",
+		"Swift",
+		"Go",
+		"Golang",
+		"Perl",
+		"R",
+		"PL/SQL",
+		"Visual Basic",
+	}
+
+	for _, jobName := range tiobeList {
+		jobNames = append(jobNames, models.MonsterJobListModel{Text: jobName})
+	}
+
+	//fmt.Println(jobNames)
+
+	return jobNames
+	// query := url.QueryEscape("Analyst Beschaffung")
+	// fmt.Println(query)
+}
+
 func SaveJobAdToDB(dataJobID string, jobModel models.MonsterJobAdModel) {
 	db := initDB()
 	defer db.Close()
@@ -155,6 +193,7 @@ func SaveJobAdToDB(dataJobID string, jobModel models.MonsterJobAdModel) {
 	db.Where(models.MonsterJobAdModel{
 		JobSourceID: dataJobID,
 	}).FirstOrCreate(&jobModel)
+
 }
 
 func IsJobInDB(dataJobID string, source string) bool {
@@ -172,4 +211,12 @@ func IsJobInDB(dataJobID string, source string) bool {
 	}
 
 	return isJobInDB
+}
+
+func SaveJobAdCrawlerEvent(jobAdCrawlerEvent models.JobAdCrawlerEventModel) {
+	db := initDB()
+	defer db.Close()
+
+	db.Create(&jobAdCrawlerEvent)
+
 }

@@ -38,7 +38,7 @@ func scrapeJobListingsFromJSON(query string, page int) bool {
 			}
 		} else {
 			//log.WithFields(log.Fields{"job_id": strconv.Itoa(jobEntry.JobID)}).Debug("job already in DB")
-			db.TouchLastEncounter(jobID)
+			db.TouchLastEncounter(jobID, "monster")
 		}
 	}
 

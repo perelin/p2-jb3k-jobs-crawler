@@ -47,6 +47,10 @@ http://www.postgresqltutorial.com/postgresql-rename-column/
 
 $ gin
 
+OR
+
+$ fresh
+
 # heroku pg backups
 $ heroku pg:backups:capture
 $ heroku pg:backups:url b001
@@ -54,6 +58,16 @@ $ heroku pg:backups:download
 $ pg_restore -c -d rb3000 latest.dump.1
 
 # 2do
+
+## better logging
+
+starting query run
+found x total query results
+finishing query run incl x new results
+
+## other
+
+Check if still alive: passive check: if last encounter is older x days (in comparison to last query scan) set active false 
 
 https://www.scraperapi.com/?utm_source=opencollective&utm_medium=github&utm_campaign=colly
 
@@ -105,3 +119,11 @@ analyse
 03: psql: UPDATE monster_job_ad_models SET job_source = 'monster';
 
 
+### 00 Interface
+
+- getJobAdListForQuery(query string) []string // urls, log Result {query,time, result count}
+- getNewAnOldJobsFromJobAdList(jobAdList []string) []string, []string // extract ID, check if ID is in DB, sort into two lists
+- markJobAdDBEntryAsSeen(url string) // for all old jobs
+- saveJobAdDetails(url string) // for all new jobs
+- //checkIfJobAdIsAlive(id string)
+- 

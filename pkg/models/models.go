@@ -30,8 +30,12 @@ type MonsterJobAdModel struct {
 	gorm.Model
 }
 
-type JobCrawlerEventModel struct {
-	Query            string
-	JobAdResultCount int
-	EbentTime        time.Time
+type JobAdCrawlerEventModel struct {
+	Query                    string
+	JobAdResultCountTotal    int
+	JobAdResultCountNew      int
+	JobAdResultCountExisting int
+	JobSource                string
+	TaskID                   string
+	EventTime                time.Time
 }
