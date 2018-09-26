@@ -226,6 +226,10 @@ func scanOverJobNames() {
 
 	for _, jobName := range jobNames {
 
+		logger.WithFields(log.Fields{
+			"query": jobName.Text}).Info(
+			"starting job ad query crawl")
+
 		jobAdURLs := ss.getJobAdListForQuery(jobName.Text)
 		newJobAds, existingJobAds := ss.splitJobAdList(jobAdURLs)
 

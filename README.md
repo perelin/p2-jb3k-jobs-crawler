@@ -118,6 +118,12 @@ analyse
 
 03: psql: UPDATE monster_job_ad_models SET job_source = 'monster';
 
+### 02 added stepstone event tracking
+
+00: stop everything
+
+01: Automigrate
+$ heroku run jb3k-tools-db-migrate
 
 ### 00 Interface
 
