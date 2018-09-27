@@ -111,12 +111,16 @@ func (s stepstone) updateExistingJobAds(jobAds []models.MonsterJobAdModel) {
 	if len(jobAds) == 0 {
 		return
 	}
-	for _, jobAd := range jobAds {
-		db.TouchLastEncounter(jobAd.JobSourceID, "stepstone")
-	}
+
+	rowsAffected := db.TouchLastEncounterBatch(jobAds, "stepstone")
+
+	// for _, jobAd := range jobAds {
+	// 	db.TouchLastEncounter(jobAd.JobSourceID, "stepstone")
+	// }
 	logger.WithFields(log.Fields{
-		"count-total": len(jobAds),
-		"query":       jobAds[1].Query}).Info(
+		"count-total":  len(jobAds),
+		"rows-updated": rowsAffected,
+		"query":        jobAds[1].Query}).Info(
 		"'last seen' timestamp of existing jobs was updated")
 }
 
@@ -254,6 +258,11 @@ func scanOverJobNames() {
 		ss.updateExistingJobAds(existingJobAds)
 	}
 }
+
+// todo next:
+// why does updating existing jobs takes so long -> try batch updates?
+// why does splitting takes so long
+// remove html from db
 
 func main() {
 

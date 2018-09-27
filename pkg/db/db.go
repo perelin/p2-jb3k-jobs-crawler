@@ -1,6 +1,7 @@
 package db
 
 import (
+	"fmt"
 	"os"
 	"p2lab/recruitbot3000/pkg/models"
 	"time"
@@ -25,7 +26,7 @@ func init() {
 
 func initDB() *gorm.DB {
 	db, err := gorm.Open("postgres", os.Getenv("DATABASE_URL"))
-	//db.LogMode(true)
+	db.LogMode(true)
 	if err != nil {
 		log.Println("failed to connect database", err)
 		panic("failed to connect database")
@@ -129,7 +130,42 @@ func TouchLastEncounter(dataJobID string, source string) {
 
 	var jobAd models.MonsterJobAdModel
 
-	db.Model(&jobAd).Where("job_source_id = ? AND job_source = ?", dataJobID, source).Update("last_encounter", time.Now)
+	//fmt.Println(time.Now())
+
+	db.Model(&jobAd).Where("job_source_id = ? AND job_source = ?", dataJobID, source).Update("last_encounter", time.Now())
+}
+
+func TestTouchLastEncounter(dataJobID string, source string, runs int) {
+	db := initDB()
+	defer db.Close()
+
+	var jobAd models.MonsterJobAdModel
+
+	//fmt.Println(time.Now())
+	for i := 0; i < runs; i++ {
+		db.Model(&jobAd).Where("job_source_id = ? AND job_source = ?", dataJobID, source).Update("last_encounter", time.Now())
+	}
+}
+
+func TouchLastEncounterBatch(jobModels []models.MonsterJobAdModel, source string) int64 {
+	db := initDB()
+	defer db.Close()
+
+	var jobAd models.MonsterJobAdModel
+	var dataJobIDs []string
+
+	for _, jobAd := range jobModels {
+		dataJobIDs = append(dataJobIDs, jobAd.JobSourceID)
+	}
+
+	fmt.Println(dataJobIDs)
+	fmt.Println(source)
+
+	//db.Model(&jobAd).Where("job_source_id IN (?) AND job_source = ?", dataJobIDs, source).Update("last_encounter", time.Now())
+	rowsAffected := db.Model(&jobAd).Where("job_source_id IN (?) AND job_source = ?", dataJobIDs, source).Updates(map[string]interface{}{"last_encounter": time.Now()}).RowsAffected
+	//fmt.Println(rowsAffected)
+
+	return rowsAffected
 }
 
 func GetJobNames() []models.MonsterJobListModel {
