@@ -1,7 +1,6 @@
 package db
 
 import (
-	"fmt"
 	"os"
 	"p2lab/recruitbot3000/pkg/models"
 	"time"
@@ -158,8 +157,8 @@ func TouchLastEncounterBatch(jobModels []models.MonsterJobAdModel, source string
 		dataJobIDs = append(dataJobIDs, jobAd.JobSourceID)
 	}
 
-	fmt.Println(dataJobIDs)
-	fmt.Println(source)
+	//fmt.Println(dataJobIDs)
+	//fmt.Println(source)
 
 	//db.Model(&jobAd).Where("job_source_id IN (?) AND job_source = ?", dataJobIDs, source).Update("last_encounter", time.Now())
 	rowsAffected := db.Model(&jobAd).Where("job_source_id IN (?) AND job_source = ?", dataJobIDs, source).Updates(map[string]interface{}{"last_encounter": time.Now()}).RowsAffected
