@@ -120,7 +120,7 @@ func (s stepstone) updateExistingJobAds(jobAds []models.MonsterJobAdModel) {
 	logger.WithFields(log.Fields{
 		"count-total":  len(jobAds),
 		"rows-updated": rowsAffected,
-		"query":        jobAds[1].Query}).Info(
+		"query":        jobAds[0].Query}).Info(
 		"'last seen' timestamp of existing jobs was updated")
 }
 
