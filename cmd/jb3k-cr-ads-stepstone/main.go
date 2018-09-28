@@ -103,7 +103,7 @@ func (s stepstone) saveNewJobAds(jobAds []models.MonsterJobAdModel) {
 	}
 	logger.WithFields(log.Fields{
 		"count-total": len(jobAds),
-		"query":       jobAds[1].Query}).Info(
+		"query":       jobAds[0].Query}).Info(
 		"saved new jobs to db")
 }
 
